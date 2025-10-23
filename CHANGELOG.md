@@ -1,3 +1,15 @@
+# 1.0.0 (2025-10-23)
+
+
+### Bug Fixes
+
+* vite.config.ts ([db9a939](https://github.com/SourceRegistry/node-env/commit/db9a9398231ee20df0fe350a8ce8f5af4c32a6e9))
+
+
+### Features
+
+* made library public ([835d12a](https://github.com/SourceRegistry/node-env/commit/835d12a84dcf3602449c083e68d5e9bc470cb8a0))
+
 # [1.2.0](https://github.com/SourceRegistry/node-jwt/compare/v1.1.0...v1.2.0) (2025-10-23)
 
 

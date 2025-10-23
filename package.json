@@ -1,6 +1,6 @@
 {
   "name": "@sourceregistry/node-env",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "A minimal, dependency-free TypeScript/JavaScript library for environment-variable loading and typed access.",
   "main": "./dist/index.cjs.js",
   "module": "./dist/index.es.js",
