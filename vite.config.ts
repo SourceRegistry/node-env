@@ -8,7 +8,6 @@ export default defineConfig({
             // Build both entrypoints
             entry: {
                 index: resolve(__dirname, 'src/index.ts'),
-                promises: resolve(__dirname, 'src/promises.ts')
             },
             formats: ['es', 'cjs'],
             fileName: (format, entryName) => `${entryName}.${format}.js`
