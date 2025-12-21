@@ -1,4 +1,4 @@
-import { readFileSync, existsSync } from "fs";
+import {readFileSync, existsSync} from "fs";
 
 function loadDotEnv(file = ".env") {
     if (!existsSync(file)) return {};
@@ -65,7 +65,15 @@ export const env = Object.freeze({
     has(key: Uppercase<string>): boolean {
         return Object.prototype.hasOwnProperty.call(process.env, key);
     },
-
+    assert(keys: Uppercase<string>[], error_builder: (missing_keys: string[]) => string | Error = ((missing_keys) => new Error(`Missing required keys(${missing_keys.join()}) in environment`)),) {
+        const missing_keys: string[] = [];
+        keys.forEach((key) => this.has(key) ? missing_keys.push(key) : void 0);
+        if (missing_keys.length > 0) {
+            const result = error_builder(missing_keys);
+            if (typeof result === "string") throw new Error(result);
+            else throw result;
+        }
+    },
     defined(key: Uppercase<string>): boolean {
         return env.has(key) && process.env[key] !== undefined;
     },
@@ -81,7 +89,7 @@ export const env = Object.freeze({
             removePrefix: RemovePrefix;
         }> = {}
     ): Record<string, any> {
-        const { reviver = (v) => v, removePrefix = false } = options;
+        const {reviver = (v) => v, removePrefix = false} = options;
         return Object.fromEntries(
             Object.entries(process.env)
                 .filter(([key]) => key.startsWith(prefix))
@@ -103,7 +111,7 @@ export const env = Object.freeze({
             return predicate(key, process.env[key]) ? TRUE : FALSE;
         },
     }),
-    get raw(){
+    get raw() {
         return Object.freeze(dotEnvVars)
     }
 });
