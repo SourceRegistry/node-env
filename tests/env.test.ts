@@ -122,4 +122,52 @@ describe("env library", () => {
         env = (await import("../src")).env;
         expect(env.raw).toBeTypeOf('object');
     });
+
+    it("assert throws error when required keys are missing (default error)", async () => {
+        mockExistsSync.mockReturnValue(false);
+        env = (await import("../src")).env;
+
+        // Define one key
+        env.string("EXISTING_KEY", "present");
+
+        // Assert on a missing key
+        expect(() => env.assert(["MISSING_KEY"])).toThrow(
+            'Missing required keys(MISSING_KEY) in environment'
+        );
+    });
+
+    it("assert throws custom error when required keys are missing", async () => {
+        mockExistsSync.mockReturnValue(false);
+        env = (await import("../src")).env;
+
+        const customErrorBuilder = (missing: string[]) =>
+            new Error(`Custom: ${missing.join(", ")} are missing!`);
+
+        expect(() => env.assert(["A", "B"], customErrorBuilder)).toThrow(
+            "Custom: A, B are missing!"
+        );
+    });
+
+    it("assert throws custom string error (converted to Error)", async () => {
+        mockExistsSync.mockReturnValue(false);
+        env = (await import("../src")).env;
+
+        const stringErrorBuilder = (missing: string[]) =>
+            `STRING ERROR: missing ${missing.join("+")}`;
+
+        expect(() => env.assert(["X"], stringErrorBuilder)).toThrow(
+            "STRING ERROR: missing X"
+        );
+    });
+
+    it("assert does nothing when all required keys exist", async () => {
+        mockExistsSync.mockReturnValue(false);
+        env = (await import("../src")).env;
+
+        env.string("KEY1", "val1");
+        env.string("KEY2", "val2");
+
+        // Should not throw
+        expect(() => env.assert(["KEY1", "KEY2"])).not.toThrow();
+    });
 });

@@ -67,7 +67,7 @@ export const env = Object.freeze({
     },
     assert(keys: Uppercase<string>[], error_builder: (missing_keys: string[]) => string | Error = ((missing_keys) => new Error(`Missing required keys(${missing_keys.join()}) in environment`)),) {
         const missing_keys: string[] = [];
-        keys.forEach((key) => this.has(key) ? missing_keys.push(key) : void 0);
+        keys.forEach((key) => this.has(key) ? void 0: missing_keys.push(key));
         if (missing_keys.length > 0) {
             const result = error_builder(missing_keys);
             if (typeof result === "string") throw new Error(result);

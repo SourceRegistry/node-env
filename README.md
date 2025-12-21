@@ -13,7 +13,7 @@ No dependencies, focus on runtime safety.
 Key features:
 - Load `.env` file (ignores comments, blank lines, quotes) and merge into `process.env`.
 - Access variables via `.string()`, `.number()`, `.boolean()` with defaults.
-- Check keys with `.has()`, `.defined()`.
+- Check keys with `.has()`, `.defined()`, `.assert()`.
 - Get `env.dev` boolean for “development vs production” mode.
 - Collect variables with a common prefix via `.collection()`, optional prefix removal & reviver.
 - Utility method `.utils.select()` for feature‐flag style branching.
@@ -84,7 +84,7 @@ When you have many environment variables prefixed in a group:
 
 ```ts
 // .env
-API_URL=https://api.example.com
+API_URL="https://api.example.com"
 API_KEY=abcdef
 API_TIMEOUT=5000
 
@@ -120,11 +120,12 @@ const mode = env.utils.select("FEATURE_X", "enabled", "disabled");
 ## API Reference
 
 | Method                                           | Description                                                                                         |
-| ------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+|--------------------------------------------------|-----------------------------------------------------------------------------------------------------|
 | `env.string(key, default?)`                      | Return the variable as a string (or default).                                                       |
 | `env.number(key, default?)`                      | Parse variable to number (or default).                                                              |
 | `env.boolean(key, default?)`                     | Parse variable to boolean (or default).                                                             |
 | `env.has(key)`                                   | Returns true if key exists in `process.env`.                                                        |
+| `env.assert([keys], error_builder?)`             | Throws an error if one or more keys doesn't exists in `process.env`.                                |
 | `env.defined(key)`                               | Returns true if key exists and value is not `undefined`.                                            |
 | `env.dev`                                        | Boolean flag: true if `NODE_ENV !== "production"`.                                                  |
 | `env.collection(prefix, options?)`               | Get an object of all env keys starting with `prefix`. Options include `removePrefix` and `reviver`. |
