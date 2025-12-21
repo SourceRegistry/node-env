@@ -1,3 +1,15 @@
+# [1.1.0](https://github.com/SourceRegistry/node-env/compare/v1.0.0...v1.1.0) (2025-12-21)
+
+
+### Bug Fixes
+
+* added coverage in tests and updated docs ([4444d7e](https://github.com/SourceRegistry/node-env/commit/4444d7ec77b64710967a15d0763c447ab7eebfb4))
+
+
+### Features
+
+* added assert to assert keys that are required to run the application ([2c6e935](https://github.com/SourceRegistry/node-env/commit/2c6e935e939aad5bec94fce0ac2c8a1e52d3602b))
+
 # 1.0.0 (2025-10-23)
 
 
