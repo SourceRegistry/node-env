@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import {beforeEach, describe, expect, it, vi} from "vitest";
 import * as fs from "fs";
 
 vi.mock("fs");
@@ -39,7 +39,8 @@ describe("env library", () => {
         mockReadFileSync.mockImplementation(() => {
             throw new Error("File read failed");
         });
-        const spy = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const spy = vi.spyOn(console, "warn").mockImplementation(() => {
+        });
         env = (await import("../src")).env;
         expect(spy).toHaveBeenCalledWith("File read failed");
     });
@@ -81,13 +82,20 @@ describe("env library", () => {
         expect(env.boolean("FLAG_FALSE")).toBe(false);
     });
 
+    it("handles URL parsing correctly", async () => {
+        mockExistsSync.mockReturnValue(false);
+        env = (await import("../src")).env;
+        (process.env as any).API_ENDPOINT = "http://localhost:8080/";
+        expect(env.url("API_ENDPOINT")).toBeInstanceOf(URL);
+    });
+
     it("creates collection with and without prefix removal", async () => {
         mockExistsSync.mockReturnValue(false);
         (process.env as any).APP_FOO = "bar";
         (process.env as any).APP_BAR = "baz";
         env = (await import("../src")).env;
         const all = env.collection("APP_");
-        const stripped = env.collection("APP_", { removePrefix: true });
+        const stripped = env.collection("APP_", {removePrefix: true});
         expect(all.APP_FOO).toBe("bar");
         expect(stripped.FOO).toBe("bar");
     });

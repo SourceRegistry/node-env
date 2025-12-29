@@ -1,4 +1,5 @@
 import {readFileSync, existsSync} from "fs";
+import {T} from "vitest/dist/chunks/global.d.MAmajcmJ";
 
 function loadDotEnv(file = ".env") {
     if (!existsSync(file)) return {};
@@ -41,7 +42,6 @@ export const env = Object.freeze({
         if (!(key in process.env)) process.env[key] = _default ?? "";
         return process.env[key] as T;
     },
-
     number(key: Uppercase<string>, _default = 0): number {
         const raw = process.env[key];
         if (raw === undefined) {
@@ -51,7 +51,6 @@ export const env = Object.freeze({
         const val = Number(raw);
         return Number.isFinite(val) ? val : _default;
     },
-
     boolean(key: Uppercase<string>, _default = false): boolean {
         const raw = process.env[key];
         if (raw === undefined) {
@@ -61,13 +60,20 @@ export const env = Object.freeze({
         const val = raw.toLowerCase();
         return val === "true" || val === "1";
     },
-
+    url(key: Uppercase<string>, _default = new URL("http://localhost")): URL {
+        const raw = process.env[key];
+        if (raw === undefined || !URL.canParse(raw)) {
+            process.env[key] = _default.toString();
+            return _default;
+        }
+        return URL.parse(raw)!;
+    },
     has(key: Uppercase<string>): boolean {
         return Object.prototype.hasOwnProperty.call(process.env, key);
     },
     assert(keys: Uppercase<string>[], error_builder: (missing_keys: string[]) => string | Error = ((missing_keys) => new Error(`Missing required keys(${missing_keys.join()}) in environment`)),) {
         const missing_keys: string[] = [];
-        keys.forEach((key) => this.has(key) ? void 0: missing_keys.push(key));
+        keys.forEach((key) => this.has(key) ? void 0 : missing_keys.push(key));
         if (missing_keys.length > 0) {
             const result = error_builder(missing_keys);
             if (typeof result === "string") throw new Error(result);
@@ -113,5 +119,5 @@ export const env = Object.freeze({
     }),
     get raw() {
         return Object.freeze(dotEnvVars)
-    }
+    },
 });

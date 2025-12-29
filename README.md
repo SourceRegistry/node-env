@@ -124,6 +124,7 @@ const mode = env.utils.select("FEATURE_X", "enabled", "disabled");
 | `env.string(key, default?)`                      | Return the variable as a string (or default).                                                       |
 | `env.number(key, default?)`                      | Parse variable to number (or default).                                                              |
 | `env.boolean(key, default?)`                     | Parse variable to boolean (or default).                                                             |
+| `env.url(key, default?)`                         | Parse variable to URL object (or default(http://localhost)).                                        |
 | `env.has(key)`                                   | Returns true if key exists in `process.env`.                                                        |
 | `env.assert([keys], error_builder?)`             | Throws an error if one or more keys doesn't exists in `process.env`.                                |
 | `env.defined(key)`                               | Returns true if key exists and value is not `undefined`.                                            |
