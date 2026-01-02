@@ -1,5 +1,4 @@
 import {readFileSync, existsSync} from "fs";
-import {T} from "vitest/dist/chunks/global.d.MAmajcmJ";
 
 function loadDotEnv(file = ".env") {
     if (!existsSync(file)) return {};
