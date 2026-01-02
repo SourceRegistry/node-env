@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/SourceRegistry/node-env/compare/v1.2.0...v1.2.1) (2026-01-02)
+
+
+### Bug Fixes
+
+* remove unused import ([a1e9e18](https://github.com/SourceRegistry/node-env/commit/a1e9e18bf02b39cdcaa8faddf565706d6d3d56ba))
+
 # [1.2.0](https://github.com/SourceRegistry/node-env/compare/v1.1.0...v1.2.0) (2025-12-29)
 
 
