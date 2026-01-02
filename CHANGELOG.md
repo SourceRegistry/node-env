@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/SourceRegistry/node-env/compare/v1.1.0...v1.2.0) (2025-12-29)
+
+
+### Features
+
+* add url parser from env ([93d0f35](https://github.com/SourceRegistry/node-env/commit/93d0f3522c030b0213b978e73cd9f01934dba586))
+
 # [1.1.0](https://github.com/SourceRegistry/node-env/compare/v1.0.0...v1.1.0) (2025-12-21)
 
 
