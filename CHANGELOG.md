@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/SourceRegistry/node-env/compare/v1.2.1...v1.3.0) (2026-03-23)
+
+
+### Features
+
+* add enum env helper and harden parsing ([a46e946](https://github.com/SourceRegistry/node-env/commit/a46e946c729fbd40cd14c919fde5cd1582da05a1))
+
 ## [1.2.1](https://github.com/SourceRegistry/node-env/compare/v1.2.0...v1.2.1) (2026-01-02)
 
 
