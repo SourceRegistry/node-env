@@ -35,6 +35,7 @@ npm install @sourceregistry/node-env
 import { env } from "@sourceregistry/node-env";
 
 console.log(env.string("APP_NAME", "MyApp"));       // => from .env or default
+console.log(env.enum("PUBLIC_SESSION_SAME_SITE", ["strict", "lax", "none"] as const, "lax")); // => "strict" | "lax" | "none"
 console.log(env.number("PORT", 3000));             // => number
 console.log(env.boolean("DEBUG", false));          // => boolean
 ```
@@ -63,7 +64,24 @@ If a key is absent, you can supply a default:
 
 ```ts
 const value = env.string("MISSING_KEY", "fallback");
+const sameSite = env.enum("PUBLIC_SESSION_SAME_SITE", ["strict", "lax", "none"] as const, "lax");
 ```
+
+---
+
+### Enums
+
+Use `env.enum()` when a variable must match one of a fixed set of string values:
+
+```ts
+const sameSite = env.enum(
+  "PUBLIC_SESSION_SAME_SITE",
+  ["strict", "lax", "none"] as const,
+  "lax"
+);
+```
+
+If the env value is missing or invalid, the default is returned. If no default is passed, the first item in the list is used.
 
 ---
 
@@ -122,6 +140,7 @@ const mode = env.utils.select("FEATURE_X", "enabled", "disabled");
 | Method                                           | Description                                                                                         |
 |--------------------------------------------------|-----------------------------------------------------------------------------------------------------|
 | `env.string(key, default?)`                      | Return the variable as a string (or default).                                                       |
+| `env.enum(key, values, default?)`                | Return the variable if it matches one of the allowed string values, otherwise use the fallback.     |
 | `env.number(key, default?)`                      | Parse variable to number (or default).                                                              |
 | `env.boolean(key, default?)`                     | Parse variable to boolean (or default).                                                             |
 | `env.url(key, default?)`                         | Parse variable to URL object (or default(http://localhost)).                                        |

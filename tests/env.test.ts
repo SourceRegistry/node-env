@@ -14,18 +14,25 @@ describe("env library", () => {
         delete process.env.NUMBER;
         delete process.env.QUOTED;
         delete process.env.BOOL;
+        delete process.env.MALFORMED;
+        delete process.env.EXPORTED;
+        delete process.env.INVALID_NUMBER;
+        delete process.env.INVALID_URL;
+        delete process.env.PUBLIC_SESSION_SAME_SITE;
         vi.resetModules();
         vi.clearAllMocks();
     });
 
     it("loads .env successfully and parses variables", async () => {
         mockExistsSync.mockReturnValue(true);
-        mockReadFileSync.mockReturnValue(`TEST=hello\nNUMBER=42\nQUOTED="value"`);
+        mockReadFileSync.mockReturnValue(`TEST=hello\nNUMBER=42\nQUOTED="value"\nexport EXPORTED=yes\nMALFORMED`);
 
         env = (await import("../src")).env;
         expect(env.string("TEST")).toBe("hello");
         expect(env.number("NUMBER")).toBe(42);
         expect(env.string("QUOTED")).toBe("value");
+        expect(env.string("EXPORTED")).toBe("yes");
+        expect(env.has("MALFORMED")).toBe(false);
     });
 
     it("handles missing .env gracefully", async () => {
@@ -50,8 +57,48 @@ describe("env library", () => {
         env = (await import("../src")).env;
 
         expect(env.string("MISSING_STR", "abc")).toBe("abc");
+        expect(env.enum("MISSING_ENUM", ["strict", "lax", "none"] as const, "lax")).toBe("lax");
         expect(env.number("MISSING_NUM", 123)).toBe(123);
         expect(env.boolean("MISSING_BOOL", true)).toBe(true);
+    });
+
+    it("returns existing enum value when valid", async () => {
+        mockExistsSync.mockReturnValue(false);
+        (process.env as any).PUBLIC_SESSION_SAME_SITE = "none";
+        env = (await import("../src")).env;
+        expect(env.enum("PUBLIC_SESSION_SAME_SITE", ["strict", "lax", "none"] as const, "lax")).toBe("none");
+    });
+
+    it("falls back to enum default when existing value is invalid", async () => {
+        mockExistsSync.mockReturnValue(false);
+        (process.env as any).PUBLIC_SESSION_SAME_SITE = "invalid";
+        env = (await import("../src")).env;
+        expect(env.enum("PUBLIC_SESSION_SAME_SITE", ["strict", "lax", "none"] as const, "lax")).toBe("lax");
+        expect(process.env.PUBLIC_SESSION_SAME_SITE).toBe("lax");
+    });
+
+    it("throws when enum default is not allowed", async () => {
+        mockExistsSync.mockReturnValue(false);
+        env = (await import("../src")).env;
+        expect(() =>
+            env.enum("PUBLIC_SESSION_SAME_SITE", ["strict", "lax", "none"] as const, "invalid" as any)
+        ).toThrow("Enum default must be one of the allowed values");
+    });
+
+    it("throws when enum values are empty", async () => {
+        mockExistsSync.mockReturnValue(false);
+        env = (await import("../src")).env;
+        expect(() =>
+            env.enum("PUBLIC_SESSION_SAME_SITE", [] as any, "lax")
+        ).toThrow("Enum values must contain at least one item");
+    });
+
+    it("throws when enum values contain empty entries", async () => {
+        mockExistsSync.mockReturnValue(false);
+        env = (await import("../src")).env;
+        expect(() =>
+            env.enum("PUBLIC_SESSION_SAME_SITE", ["strict", ""] as any, "strict")
+        ).toThrow("Enum values must be non-empty strings");
     });
 
     it("detects existing and defined keys", async () => {
@@ -74,7 +121,7 @@ describe("env library", () => {
     it("handles boolean parsing correctly", async () => {
         mockExistsSync.mockReturnValue(false);
         env = (await import("../src")).env;
-        (process.env as any).FLAG_TRUE = "true";
+        (process.env as any).FLAG_TRUE = " true ";
         (process.env as any).FLAG_ONE = "1";
         (process.env as any).FLAG_FALSE = "false";
         expect(env.boolean("FLAG_TRUE")).toBe(true);
@@ -87,6 +134,22 @@ describe("env library", () => {
         env = (await import("../src")).env;
         (process.env as any).API_ENDPOINT = "http://localhost:8080/";
         expect(env.url("API_ENDPOINT")).toBeInstanceOf(URL);
+    });
+
+    it("falls back and normalizes invalid number values", async () => {
+        mockExistsSync.mockReturnValue(false);
+        (process.env as any).INVALID_NUMBER = "NaN";
+        env = (await import("../src")).env;
+        expect(env.number("INVALID_NUMBER", 123)).toBe(123);
+        expect(process.env.INVALID_NUMBER).toBe("123");
+    });
+
+    it("falls back and normalizes invalid URL values", async () => {
+        mockExistsSync.mockReturnValue(false);
+        (process.env as any).INVALID_URL = "not-a-url";
+        env = (await import("../src")).env;
+        expect(env.url("INVALID_URL", new URL("https://example.com"))).toEqual(new URL("https://example.com"));
+        expect(process.env.INVALID_URL).toBe("https://example.com/");
     });
 
     it("creates collection with and without prefix removal", async () => {
@@ -125,10 +188,37 @@ describe("env library", () => {
         expect(inverse).toBe("OFF");
     });
 
-    it("raw to return an object", async () => {
+    it("utils.select passes the key and raw value to a custom predicate", async () => {
         mockExistsSync.mockReturnValue(false);
+        (process.env as any).FEATURE_ENABLED = "custom";
+        env = (await import("../src")).env;
+        const predicate = vi.fn((key: string, value: string | undefined) =>
+            key === "FEATURE_ENABLED" && value === "custom"
+        );
+        expect(env.utils.select("FEATURE_ENABLED", "ON", "OFF", predicate)).toBe("ON");
+        expect(predicate).toHaveBeenCalledWith("FEATURE_ENABLED", "custom");
+    });
+
+    it("raw to return an object", async () => {
+        mockExistsSync.mockReturnValue(true);
+        mockReadFileSync.mockReturnValue("TEST=hello");
         env = (await import("../src")).env;
         expect(env.raw).toBeTypeOf('object');
+        expect(() => ((env.raw as any).TEST = "changed")).toThrow();
+        expect(env.raw.TEST).toBe("hello");
+    });
+
+    it("throws on invalid empty keys", async () => {
+        mockExistsSync.mockReturnValue(false);
+        env = (await import("../src")).env;
+        expect(() => env.string("" as any, "fallback")).toThrow("Environment key must be a non-empty string");
+        expect(() => env.has("   " as any)).toThrow("Environment key must be a non-empty string");
+    });
+
+    it("throws on non-finite number defaults", async () => {
+        mockExistsSync.mockReturnValue(false);
+        env = (await import("../src")).env;
+        expect(() => env.number("PORT", Number.NaN)).toThrow("Number default must be a finite number");
     });
 
     it("assert throws error when required keys are missing (default error)", async () => {
