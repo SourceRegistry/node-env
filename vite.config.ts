@@ -1,6 +1,5 @@
 import {resolve} from 'node:path';
 import {defineConfig} from 'vite';
-import dts from 'vite-plugin-dts';
 
 export default defineConfig({
     build: {
@@ -15,17 +14,8 @@ export default defineConfig({
         rollupOptions: {
             external: ['fs', 'path']
         },
+        emptyOutDir: false,
         sourcemap: true,
         target: 'node22'
-    },
-    plugins: [
-        dts({
-            compilerOptions: {
-                stripInternal: false,
-                removeComments: false
-            },
-            // Ensure both files are included in type generation
-            include: ['src/index.ts']
-        })
-    ]
+    }
 });
