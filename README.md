@@ -1,31 +1,26 @@
-# 🧰 @sourceregistry/node-env
+# @sourceregistry/node-env
 [![npm version](https://img.shields.io/npm/v/@sourceregistry/node-env?logo=npm)](https://www.npmjs.com/package/@sourceregistry/node-env)
 [![License](https://img.shields.io/npm/l/@sourceregistry/node-env)](https://github.com/SourceRegistry/node-env/blob/main/LICENSE)
 [![CI](https://github.com/SourceRegistry/node-env/actions/workflows/test.yml/badge.svg)](https://github.com/SourceRegistry/node-env/actions)
 [![Codecov](https://img.shields.io/codecov/c/github/SourceRegistry/node-env)](https://codecov.io/gh/SourceRegistry/node-env)
 
-
 ## What is it?
 
-`env` makes it safe and simple to load variables from `.env` and `process.env`, and access them in a typed manner: strings, numbers, booleans, collections.  
-No dependencies, focus on runtime safety.
+`env` is a dependency-free TypeScript and JavaScript library for loading `.env` files and reading `process.env` with typed helpers.
 
 Key features:
-- Load `.env` file (ignores comments, blank lines, quotes) and merge into `process.env`.
-- Access variables via `.string()`, `.number()`, `.boolean()` with defaults.
-- Check keys with `.has()`, `.defined()`, `.assert()`.
-- Get `env.dev` boolean for “development vs production” mode.
-- Collect variables with a common prefix via `.collection()`, optional prefix removal & reviver.
-- Utility method `.utils.select()` for feature‐flag style branching.
-
----
+- Load `.env` values into `process.env`.
+- Typed accessors for strings, enums, numbers, booleans, URLs, and collections.
+- Strict schema-based env validation for production startup checks.
+- Env-aware CSV parsing for comma-separated list variables.
+- Runtime enforcement for uppercase env keys.
+- Safe normalization of invalid values back to defaults.
 
 ## Installation
 
 ```bash
 npm install @sourceregistry/node-env
-````
----
+```
 
 ## Usage
 
@@ -34,149 +29,153 @@ npm install @sourceregistry/node-env
 ```ts
 import { env } from "@sourceregistry/node-env";
 
-console.log(env.string("APP_NAME", "MyApp"));       // => from .env or default
-console.log(env.enum("PUBLIC_SESSION_SAME_SITE", ["strict", "lax", "none"] as const, "lax")); // => "strict" | "lax" | "none"
-console.log(env.number("PORT", 3000));             // => number
-console.log(env.boolean("DEBUG", false));          // => boolean
+const appName = env.string("APP_NAME", "MyApp");
+const sameSite = env.enum("PUBLIC_SESSION_SAME_SITE", ["strict", "lax", "none"] as const, "lax");
+const port = env.number("PORT", 3000);
+const debug = env.boolean("DEBUG", false);
 ```
-
-Suppose your `.env` file is:
-
-```
-APP_NAME=HelloWorld
-PORT=8080
-DEBUG=true
-```
-
-Then you’ll get:
-
-```
-HelloWorld
-8080
-true
-```
-
----
 
 ### Defaults
 
-If a key is absent, you can supply a default:
+If a key is missing or invalid, the accessor falls back to the provided default and normalizes `process.env` to that value.
 
 ```ts
-const value = env.string("MISSING_KEY", "fallback");
-const sameSite = env.enum("PUBLIC_SESSION_SAME_SITE", ["strict", "lax", "none"] as const, "lax");
+const port = env.number("PORT", 3000);
+const cache = env.boolean("ENABLE_CACHE", false);
 ```
-
----
-
-### Enums
-
-Use `env.enum()` when a variable must match one of a fixed set of string values:
-
-```ts
-const sameSite = env.enum(
-  "PUBLIC_SESSION_SAME_SITE",
-  ["strict", "lax", "none"] as const,
-  "lax"
-);
-```
-
-If the env value is missing or invalid, the default is returned. If no default is passed, the first item in the list is used.
-
----
 
 ### Booleans
 
-The boolean logic treats `"true"` or `"1"` (case-insensitive) as `true`; anything else as `false` (unless default).
+Boolean parsing accepts `"true"`, `"1"`, `"yes"`, and `"on"` as `true`, and `"false"`, `"0"`, `"no"`, and `"off"` as `false`.
 
 ```ts
-process.env.FLAG = "1";
-console.log(env.boolean("FLAG", false));  // => true
+process.env.FLAG = "yes";
+console.log(env.boolean("FLAG", false)); // true
 ```
-
----
 
 ### Collections
 
-When you have many environment variables prefixed in a group:
-
 ```ts
-// .env
-API_URL="https://api.example.com"
-API_KEY=abcdef
-API_TIMEOUT=5000
-
-// code
 const api = env.collection("API_");
-console.log(api);
-// => { URL: "https://api.example.com", KEY: "abcdef", TIMEOUT: "5000" }
-```
-
-You can remove the prefix and apply a reviver:
-
-```ts
-const cfg = env.collection("API_", {
+const config = env.collection("API_", {
   removePrefix: true,
   reviver: (value, key) => key === "TIMEOUT" ? Number(value) : value
 });
-console.log(cfg);
-// => { URL: "https://api.example.com", KEY: "abcdef", TIMEOUT: 5000 }
 ```
 
----
+### Production schema validation
 
-### Utility - select
-
-A simple utility to select between two values based on the boolean state of an env key:
+Use `env.schema` when application startup should fail fast on invalid configuration.
 
 ```ts
-const mode = env.utils.select("FEATURE_X", "enabled", "disabled");
+import { env, SchemaValidationError } from "@sourceregistry/node-env";
+
+const envSchema = env.schema.object({
+  NODE_ENV: env.schema.enum(["development", "test", "production"] as const),
+  PORT: env.schema.number({ integer: true, min: 1, default: 3000 }),
+  DATABASE_URL: env.schema.url({ protocols: ["https:"] }),
+  ENABLE_CACHE: env.schema.boolean({ default: false }),
+  ALLOWED_HOSTS: env.schema.csv(),
+});
+
+try {
+  const config = env.schema.parse(envSchema);
+
+  config.PORT; // number
+  config.DATABASE_URL; // URL
+  config.ENABLE_CACHE; // boolean
+  config.ALLOWED_HOSTS; // string[] | undefined
+} catch (error) {
+  if (error instanceof SchemaValidationError) {
+    console.error(error.errors);
+  }
+  throw error;
+}
 ```
 
----
+Schema object keys must be uppercase:
+
+```ts
+env.schema.object({
+  PORT: env.schema.number(),
+  DATABASE_URL: env.schema.url(),
+});
+```
+
+Use `env.schema.safeParse()` if you want a result object instead of an exception.
+
+### Map directly to app config
+
+Use `env.config.map()` when you want to define the final app config structure directly:
+
+```ts
+const runtimeConfig = env.config.map({
+  nodeEnv: env.config.field(
+    "NODE_ENV",
+    env.schema.enum(["development", "test", "production"] as const, {
+      default: "development",
+    })
+  ),
+  serverPort: env.config.field(
+    "PUBLIC_SERVER_PORT",
+    env.schema.number({ integer: true, min: 1, max: 65_535, default: 3000 })
+  ),
+  allowedHosts: env.config.field(
+    "PUBLIC_ALLOWED_HOSTS",
+    env.schema.csv()
+  ),
+});
+```
+
+`env.config.safeMap()` returns `{ success, data | errors }` instead of throwing.
+
+### CSV env values
+
+Use `env.schema.csv()` for comma-separated env variables:
+
+```ts
+const envSchema = env.schema.object({
+  PUBLIC_ALLOWED_HOSTS: env.schema.csv(),
+  PUBLIC_TRUSTED_PROXIES: env.schema.csv({
+    default: ["127.0.0.1"],
+  }),
+});
+```
 
 ## API Reference
 
-| Method                                           | Description                                                                                         |
-|--------------------------------------------------|-----------------------------------------------------------------------------------------------------|
-| `env.string(key, default?)`                      | Return the variable as a string (or default).                                                       |
-| `env.enum(key, values, default?)`                | Return the variable if it matches one of the allowed string values, otherwise use the fallback.     |
-| `env.number(key, default?)`                      | Parse variable to number (or default).                                                              |
-| `env.boolean(key, default?)`                     | Parse variable to boolean (or default).                                                             |
-| `env.url(key, default?)`                         | Parse variable to URL object (or default(http://localhost)).                                        |
-| `env.has(key)`                                   | Returns true if key exists in `process.env`.                                                        |
-| `env.assert([keys], error_builder?)`             | Throws an error if one or more keys doesn't exists in `process.env`.                                |
-| `env.defined(key)`                               | Returns true if key exists and value is not `undefined`.                                            |
-| `env.dev`                                        | Boolean flag: true if `NODE_ENV !== "production"`.                                                  |
-| `env.collection(prefix, options?)`               | Get an object of all env keys starting with `prefix`. Options include `removePrefix` and `reviver`. |
-| `env.utils.select(key, TRUE, FALSE, predicate?)` | Return `TRUE` or `FALSE` depending on the predicate result on the env key.                          |
+| Method | Description |
+| --- | --- |
+| `env.string(key, default?)` | Return the variable as a string or the fallback. |
+| `env.enum(key, values, default?)` | Return a string enum value or the fallback. |
+| `env.number(key, default?)` | Return the variable as a number or the fallback. |
+| `env.boolean(key, default?)` | Return the variable as a boolean or the fallback. |
+| `env.url(key, default?)` | Return the variable as a `URL` or the fallback. |
+| `env.has(key)` | Return `true` if the env key exists. |
+| `env.defined(key)` | Return `true` if the env key exists and is not `undefined`. |
+| `env.assert(keys, errorBuilder?)` | Throw if one or more required keys are missing. |
+| `env.collection(prefix, options?)` | Return an object of env values that share a prefix. |
+| `env.utils.select(key, TRUE, FALSE, predicate?)` | Select between two values based on an env predicate. |
+| `env.dev` | Return `true` unless `NODE_ENV === "production"`. |
+| `env.schema` | Build and parse typed env schemas from `process.env`. |
+| `env.config` | Map validated env fields directly into your final app config object. |
 
----
+## Testing
 
-🧪 **Testing**
-This library has 100% test coverage with Vitest:
 ```bash
 npm test
 npm run test:coverage
+npm run verify
 ```
-
----
 
 ## Contributing
 
-Contributions are very welcome!
-Please open issues for bugs or feature requests and pull requests for changes.
-Follow the standard fork → branch → PR workflow.
-
----
-
-🙌 **Contributing**
-PRs welcome! Please:
-- Add tests for new features
-- Maintain 100% coverage
-- Follow existing code style
+PRs are welcome. Please:
+- Add tests for new features.
+- Keep type-checking and tests green.
+- Preserve the existing API guarantees unless a breaking change is intended.
 
 Found a security issue? [Report it responsibly](mailto:a.p.a.slaa@projectsource.nl).
 
-🔗 **GitHub**: [github.com/SourceRegistry/node-env](https://github.com/SourceRegistry/node-env)  
-📦 **npm**: [@sourceregistry/node-env](https://www.npmjs.com/package/@sourceregistry/node-env)
+GitHub: [github.com/SourceRegistry/node-env](https://github.com/SourceRegistry/node-env)  
+npm: [@sourceregistry/node-env](https://www.npmjs.com/package/@sourceregistry/node-env)

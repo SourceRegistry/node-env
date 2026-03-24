@@ -21,6 +21,8 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "lint": "tsc --noEmit",
+    "verify": "npm run lint && npm run test:coverage && npm run build",
+    "prepublishOnly": "npm run verify",
     "docs:build": "typedoc src/index.ts --out docs --name \"node-env\" --theme default --excludePrivate --excludeProtected"
   },
   "repository": {
