@@ -1,3 +1,10 @@
+## [1.4.2](https://github.com/SourceRegistry/node-env/compare/v1.4.1...v1.4.2) (2026-03-24)
+
+
+### Bug Fixes
+
+* typings ([0fee178](https://github.com/SourceRegistry/node-env/commit/0fee178d296d5d8ecaeb2011596d8e07ee101f01))
+
 ## [1.4.1](https://github.com/SourceRegistry/node-env/compare/v1.4.0...v1.4.1) (2026-03-24)
 
 
