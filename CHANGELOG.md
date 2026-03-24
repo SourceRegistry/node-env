@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/SourceRegistry/node-env/compare/v1.3.0...v1.4.0) (2026-03-24)
+
+
+### Features
+
+* **env:** add production-ready schema and config api ([8b848b1](https://github.com/SourceRegistry/node-env/commit/8b848b14a83cbe0d1a121deb01bb31eff2bd9e1d))
+
 # [1.3.0](https://github.com/SourceRegistry/node-env/compare/v1.2.1...v1.3.0) (2026-03-23)
 
 
