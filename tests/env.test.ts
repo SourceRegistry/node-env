@@ -650,6 +650,50 @@ describe("env library", () => {
         expectTypeOf(runtimeConfig.secretEncryptionKeyBuffer).toEqualTypeOf<Buffer>();
     });
 
+    it("preserves field output types when a mapped config shape is defined separately", async () => {
+        mockExistsSync.mockReturnValue(false);
+        env = (await import("../src")).env;
+
+        const runtimeConfigShape = {
+            nodeEnv: env.config.field(
+                "NODE_ENV",
+                env.schema.enum(["development", "test", "production"] as const, {
+                    default: "development",
+                })
+            ),
+            logLevel: env.config.field(
+                "LOG_LEVEL",
+                env.schema.enum(["debug", "info", "warn", "error"] as const, {
+                    default: "info",
+                })
+            ),
+            serverPort: env.config.field(
+                "PUBLIC_SERVER_PORT",
+                env.schema.number({integer: true, min: 1, max: 65_535, default: 3000})
+            ),
+            allowedHosts: env.config.field(
+                "PUBLIC_ALLOWED_HOSTS",
+                env.schema.csv()
+            ),
+            secretEncryptionKeyBuffer: env.config.field(
+                "SECRET_ENCRYPTION_KEY",
+                env.schema.string({trim: true, min: 1}),
+                (value) => Buffer.from(value, "base64")
+            ),
+        } as const;
+
+        expectTypeOf(runtimeConfigShape.nodeEnv)
+            .toEqualTypeOf<import("../src").EnvMappedField<"development" | "test" | "production">>();
+        expectTypeOf(runtimeConfigShape.logLevel)
+            .toEqualTypeOf<import("../src").EnvMappedField<"debug" | "info" | "warn" | "error">>();
+        expectTypeOf(runtimeConfigShape.serverPort)
+            .toEqualTypeOf<import("../src").EnvMappedField<number>>();
+        expectTypeOf(runtimeConfigShape.allowedHosts)
+            .toEqualTypeOf<import("../src").EnvMappedField<string[] | undefined>>();
+        expectTypeOf(runtimeConfigShape.secretEncryptionKeyBuffer)
+            .toEqualTypeOf<import("../src").EnvMappedField<string, Buffer>>();
+    });
+
     it("safeMap returns env validation errors for invalid mapped fields", async () => {
         mockExistsSync.mockReturnValue(false);
         env = (await import("../src")).env;

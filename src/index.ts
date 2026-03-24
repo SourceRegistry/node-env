@@ -200,11 +200,20 @@ function defineEnvSchema<S extends EnvSchemaShape>(
     return validation.object(shape as SchemaShape, options) as EnvObjectSchema<S>;
 }
 
-function defineEnvField<TKey extends Uppercase<string>, TValue, TOutput = TValue>(
+function defineEnvField<TKey extends Uppercase<string>, TValue>(
+    key: TKey,
+    validator: Validator<TValue>
+): EnvMappedField<TValue, TValue>;
+function defineEnvField<TKey extends Uppercase<string>, TValue, TOutput>(
+    key: TKey,
+    validator: Validator<TValue>,
+    transform: (value: TValue, source: EnvSource) => TOutput
+): EnvMappedField<TValue, TOutput>;
+function defineEnvField<TKey extends Uppercase<string>, TValue, TOutput>(
     key: TKey,
     validator: Validator<TValue>,
     transform?: (value: TValue, source: EnvSource) => TOutput
-): EnvMappedField<TValue, TOutput> {
+): EnvMappedField<TValue, TOutput | TValue> {
     assertKey(key);
     return {
         key,
