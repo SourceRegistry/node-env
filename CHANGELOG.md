@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/SourceRegistry/node-env/compare/v1.4.0...v1.4.1) (2026-03-24)
+
+
+### Bug Fixes
+
+* **config:** preserve mapped field type inference ([a192abe](https://github.com/SourceRegistry/node-env/commit/a192abe152f1ad7aca77b60f77e26af3193ea808))
+
 # [1.4.0](https://github.com/SourceRegistry/node-env/compare/v1.3.0...v1.4.0) (2026-03-24)
 
 
