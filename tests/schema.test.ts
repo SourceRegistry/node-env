@@ -1,14 +1,16 @@
 import {describe, expect, it} from "vitest";
 import {
+    adaptSchema,
     fail,
     isFailure,
     ok,
     runValidation,
     SchemaValidationError,
+    ValidationAdapterResult,
     validation
-} from "../src/schema.helper";
+} from "../src";
 
-describe("schema helper", () => {
+describe("validation", () => {
     it("exposes ok, fail, isFailure, and runValidation helpers", () => {
         const success = ok("value");
         const failure = fail("Broken", ["ROOT", 0], "bad");
@@ -195,5 +197,31 @@ describe("schema helper", () => {
         }));
 
         expect(() => validation.parse(validation.number(), "nope")).toThrow(SchemaValidationError);
+    });
+
+    it("adapts external safeParse-style schemas without adding a dependency", () => {
+        const schema = {
+            safeParse(value: unknown) {
+                if (typeof value === "string" && value.length > 0) {
+                    return {success: true as const, data: value.toUpperCase()};
+                }
+                return {
+                    success: false as const,
+                    issues: [{path: [], message: "Expected non-empty string", code: "custom"}],
+                };
+            },
+        };
+
+        const validator = adaptSchema<typeof schema, string>(schema, {
+            safeParse(target, value): ValidationAdapterResult<string> {
+                return target.safeParse(value);
+            },
+        });
+
+        expect(validation.parse(validator, "test")).toBe("TEST");
+        expect(validation.safeParse(validator, "")).toEqual(expect.objectContaining({
+            success: false,
+            errors: [expect.objectContaining({path: "$", code: "custom"})],
+        }));
     });
 });

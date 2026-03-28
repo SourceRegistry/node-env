@@ -37,19 +37,54 @@ export type ValidationPath = Array<string | number>;
  * Runtime validator function.
  */
 export type Validator<T> = (value: unknown, path?: ValidationPath) => ValidationResult<T>;
+
 /**
  * Infers the validated type from a validator.
  */
 export type InferValidator<V> = V extends Validator<infer T> ? T : never;
+
 /**
  * Generic object schema shape.
  */
 export type SchemaShape = Record<string, Validator<any>>;
+
 /**
  * Infers the validated output from an object schema shape.
  */
 export type InferSchemaShape<S extends SchemaShape> = {
     [K in keyof S]: InferValidator<S[K]>;
+};
+
+/**
+ * Issue input shape accepted by adapter helpers.
+ */
+export type ValidationIssueInput = {
+    path?: string | ValidationPath;
+    message: string;
+    code?: string;
+};
+
+/**
+ * Result shape accepted by adapter helpers.
+ */
+export type ValidationAdapterResult<T> =
+    | ValidationResult<T>
+    | {
+        success: true;
+        data: T;
+    }
+    | {
+        success: false;
+        errors?: ValidationIssueInput[];
+        issues?: ValidationIssueInput[];
+        error?: unknown;
+    };
+
+/**
+ * Adapter used to bridge external schema libraries into the local validator contract.
+ */
+export type ValidationAdapter<TSchema, TOutput = unknown> = {
+    safeParse(schema: TSchema, value: unknown): ValidationAdapterResult<TOutput>;
 };
 
 /**
@@ -65,7 +100,7 @@ export class SchemaValidationError extends Error {
     }
 }
 
-const toPathString = (path: ValidationPath) => {
+export const toPathString = (path: ValidationPath) => {
     if (path.length === 0) return "$";
     return path.reduce<string>((acc, part) => {
         if (typeof part === "number") return `${acc}[${part}]`;
@@ -73,6 +108,19 @@ const toPathString = (path: ValidationPath) => {
         return `${acc}.${part}`;
     }, "$");
 };
+
+const normalizePath = (path: string | ValidationPath | undefined, fallback: ValidationPath): string => {
+    if (typeof path === "string") {
+        return path.startsWith("$") ? path : toPathString([...fallback, path]);
+    }
+    return toPathString(path ?? fallback);
+};
+
+const normalizeIssue = (issue: ValidationIssueInput, fallback: ValidationPath): ValidationIssue => ({
+    path: normalizePath(issue.path, fallback),
+    message: issue.message,
+    code: issue.code,
+});
 
 /**
  * Creates a successful validation result.
@@ -103,6 +151,47 @@ export const isFailure = <T>(result: ValidationResult<T>): result is ValidationF
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
     typeof value === "object" && value !== null && !Array.isArray(value);
+
+/**
+ * Normalizes adapter output into the local validation result format.
+ */
+export const normalizeAdapterResult = <T>(
+    result: ValidationAdapterResult<T>,
+    path: ValidationPath = []
+): ValidationResult<T> => {
+    if (result.success) {
+        return ok(result.data);
+    }
+
+    if ("errors" in result && Array.isArray(result.errors) && result.errors.length > 0) {
+        return {
+            success: false,
+            errors: result.errors.map((issue) => normalizeIssue(issue, path)),
+        };
+    }
+
+    if ("issues" in result && Array.isArray(result.issues) && result.issues.length > 0) {
+        return {
+            success: false,
+            errors: result.issues.map((issue) => normalizeIssue(issue, path)),
+        };
+    }
+
+    const error = "error" in result ? result.error : undefined;
+    const message = error instanceof Error
+        ? error.message
+        : "Schema validation failed";
+    return fail(message, path, "invalid_schema");
+};
+
+/**
+ * Wraps an external schema and adapter into a local validator function.
+ */
+export const adaptSchema = <TSchema, T>(
+    schema: TSchema,
+    adapter: ValidationAdapter<TSchema, T>
+): Validator<T> =>
+    (value, path = []) => normalizeAdapterResult<T>(adapter.safeParse(schema, value), path);
 
 /**
  * Runs a validator against a value.

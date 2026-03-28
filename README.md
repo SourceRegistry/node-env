@@ -129,6 +129,31 @@ const runtimeConfig = env.config.map({
 
 `env.config.safeMap()` returns `{ success, data | errors }` instead of throwing.
 
+### Plug in another schema library
+
+The package ships with a built-in dependency-free validator, but the root export also exposes `adaptSchema()` so you can wrap another runtime schema library later without coupling your app to an internal helper module.
+
+```ts
+import { adaptSchema, env, validation } from "@sourceregistry/node-env";
+
+const externalSchema = {
+  safeParse(value: unknown) {
+    return typeof value === "string"
+      ? { success: true as const, data: value }
+      : { success: false as const, issues: [{ message: "Expected string" }] };
+  },
+};
+
+const ExternalString = adaptSchema<typeof externalSchema, string>(externalSchema, {
+  safeParse(schema, value) {
+    return schema.safeParse(value);
+  },
+});
+
+validation.parse(ExternalString, "ok");
+env.config.field("APP_NAME", ExternalString);
+```
+
 ### CSV env values
 
 Use `env.schema.csv()` for comma-separated env variables:

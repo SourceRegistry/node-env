@@ -1,5 +1,6 @@
 import {readFileSync, existsSync} from "fs";
 import {
+    adaptSchema,
     fail,
     InferValidator,
     InferSchemaShape,
@@ -14,8 +15,11 @@ import {
     ValidationFailure,
     ValidationResult,
     ValidationSuccess,
+    ValidationAdapter,
+    ValidationAdapterResult,
+    ValidationIssueInput,
     Validator
-} from "./schema.helper";
+} from "./validation";
 
 type DotEnvEntries = Record<string, string>;
 const ENV_KEY_PATTERN = /^[A-Z_][A-Z0-9_]*$/;
@@ -701,8 +705,13 @@ export const env = Object.freeze({
  * Re-export of the generic validation primitives and supporting public types.
  */
 export {
+    adaptSchema,
     envConfig,
     envValidation,
+    fail,
+    isFailure,
+    ok,
+    runValidation,
     SchemaValidationError,
     validation,
 };
@@ -710,8 +719,11 @@ export type {
     InferValidator,
     InferSchemaShape,
     SchemaShape,
+    ValidationAdapter,
+    ValidationAdapterResult,
     ValidationFailure,
     ValidationIssue,
+    ValidationIssueInput,
     ValidationPath,
     ValidationResult,
     ValidationSuccess,
