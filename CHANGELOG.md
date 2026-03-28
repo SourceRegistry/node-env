@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/SourceRegistry/node-env/compare/v1.4.2...v1.5.0) (2026-03-28)
+
+
+### Features
+
+* decouple env schema validation from internal helper ([2c29d59](https://github.com/SourceRegistry/node-env/commit/2c29d59796dde52a5ca5a743a405cf2c8266cc5b))
+
 ## [1.4.2](https://github.com/SourceRegistry/node-env/compare/v1.4.1...v1.4.2) (2026-03-24)
 
 
