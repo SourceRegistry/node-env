@@ -3,12 +3,14 @@ import {
     adaptSchema,
     fail,
     isFailure,
+    normalizeAdapterResult,
     ok,
     runValidation,
     SchemaValidationError,
+    toPathString,
     ValidationAdapterResult,
     validation
-} from "../src";
+} from "../src/validation";
 
 describe("validation", () => {
     it("exposes ok, fail, isFailure, and runValidation helpers", () => {
@@ -27,6 +29,59 @@ describe("validation", () => {
         expect(isFailure(success)).toBe(false);
         expect(isFailure(failure)).toBe(true);
         expect(runValidation(validation.literal("value"), "value")).toEqual(success);
+    });
+
+    it("normalizes adapter paths from string and fallback inputs", () => {
+        expect(toPathString([])).toBe("$");
+
+        expect(normalizeAdapterResult({
+            success: false,
+            errors: [{path: "child", message: "Broken", code: "custom"}],
+        }, ["ROOT"])).toEqual({
+            success: false,
+            errors: [{path: "$.ROOT.child", message: "Broken", code: "custom"}],
+        });
+
+        expect(normalizeAdapterResult({
+            success: false,
+            errors: [{path: "$.child", message: "Broken", code: "custom"}],
+        }, ["ROOT"])).toEqual({
+            success: false,
+            errors: [{path: "$.child", message: "Broken", code: "custom"}],
+        });
+
+        expect(normalizeAdapterResult({
+            success: false,
+            errors: [{message: "Broken", code: "custom"}],
+        }, ["ROOT"])).toEqual({
+            success: false,
+            errors: [{path: "$.ROOT", message: "Broken", code: "custom"}],
+        });
+    });
+
+    it("falls back to invalid_schema when adapter failures omit issue arrays", () => {
+        expect(normalizeAdapterResult({
+            success: false,
+            error: "plain failure",
+        }, ["CONFIG"])).toEqual({
+            success: false,
+            errors: [{path: "$.CONFIG", message: "Schema validation failed", code: "invalid_schema"}],
+        });
+
+        expect(normalizeAdapterResult({
+            success: false,
+            error: new Error("adapter exploded"),
+        }, ["CONFIG"])).toEqual({
+            success: false,
+            errors: [{path: "$.CONFIG", message: "adapter exploded", code: "invalid_schema"}],
+        });
+
+        expect(normalizeAdapterResult({
+            success: false,
+        } as any, ["CONFIG"])).toEqual({
+            success: false,
+            errors: [{path: "$.CONFIG", message: "Schema validation failed", code: "invalid_schema"}],
+        });
     });
 
     it("validates strings across success and failure branches", () => {

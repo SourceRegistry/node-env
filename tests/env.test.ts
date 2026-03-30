@@ -24,6 +24,7 @@ describe("env library", () => {
         delete process.env.LOG_LEVEL;
         delete process.env.PUBLIC_ALLOWED_HOSTS;
         delete process.env.PUBLIC_TRUSTED_PROXIES;
+        delete process.env.PRESERVED;
         vi.resetModules();
         vi.clearAllMocks();
     });
@@ -38,6 +39,17 @@ describe("env library", () => {
         expect(env.string("QUOTED")).toBe("value");
         expect(env.string("EXPORTED")).toBe("yes");
         expect(env.has("MALFORMED")).toBe(false);
+    });
+
+    it("does not overwrite existing process env values with dotenv values", async () => {
+        mockExistsSync.mockReturnValue(true);
+        mockReadFileSync.mockReturnValue("PRESERVED=from-dotenv");
+        process.env.PRESERVED = "from-process";
+
+        env = (await import("../src")).env;
+
+        expect(env.string("PRESERVED")).toBe("from-process");
+        expect(env.raw.PRESERVED).toBe("from-dotenv");
     });
 
     it("parses production-style dotenv values with comments, escapes, and invalid keys ignored", async () => {
