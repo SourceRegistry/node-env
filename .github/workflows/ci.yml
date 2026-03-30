@@ -57,7 +57,7 @@ jobs:
           node-version: 24
           registry-url: "https://registry.npmjs.org/"
       - name: Install dependencies
-        run: npm install
+        run: npm ci
       - name: Create release metadata
         run: npx semantic-release
       - name: Fetch latest main and tags
