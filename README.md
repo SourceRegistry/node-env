@@ -1,7 +1,8 @@
 # @sourceregistry/node-env
 [![npm version](https://img.shields.io/npm/v/@sourceregistry/node-env?logo=npm)](https://www.npmjs.com/package/@sourceregistry/node-env)
+[![JSR](https://jsr.io/badges/@sourceregistry/node-env)](https://jsr.io/@sourceregistry/node-env)
 [![License](https://img.shields.io/npm/l/@sourceregistry/node-env)](https://github.com/SourceRegistry/node-env/blob/main/LICENSE)
-[![CI](https://github.com/SourceRegistry/node-env/actions/workflows/test.yml/badge.svg)](https://github.com/SourceRegistry/node-env/actions)
+[![CI](https://github.com/SourceRegistry/node-env/actions/workflows/ci.yml/badge.svg)](https://github.com/SourceRegistry/node-env/actions/workflows/ci.yml)
 [![Codecov](https://img.shields.io/codecov/c/github/SourceRegistry/node-env)](https://codecov.io/gh/SourceRegistry/node-env)
 
 ## What is it?
@@ -20,6 +21,10 @@ Key features:
 
 ```bash
 npm install @sourceregistry/node-env
+```
+
+```bash
+npx jsr add @sourceregistry/node-env
 ```
 
 ## Usage
@@ -191,6 +196,7 @@ const envSchema = env.schema.object({
 npm test
 npm run test:coverage
 npm run verify
+npm run jsr:check
 ```
 
 ## Contributing
@@ -203,4 +209,5 @@ PRs are welcome. Please:
 Found a security issue? [Report it responsibly](mailto:a.p.a.slaa@projectsource.nl).
 
 GitHub: [github.com/SourceRegistry/node-env](https://github.com/SourceRegistry/node-env)  
-npm: [@sourceregistry/node-env](https://www.npmjs.com/package/@sourceregistry/node-env)
+npm: [@sourceregistry/node-env](https://www.npmjs.com/package/@sourceregistry/node-env)  
+JSR: [@sourceregistry/node-env](https://jsr.io/@sourceregistry/node-env)

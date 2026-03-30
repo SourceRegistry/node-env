@@ -185,6 +185,113 @@ export type InferMappedShape<TShape extends EnvMappedShape> = {
     [K in keyof TShape]: InferMappedField<TShape[K]>;
 };
 
+type EnvValidationApi = {
+    string: (options?: {
+        trim?: boolean;
+        min?: number;
+        max?: number;
+        non_empty?: boolean;
+        pattern?: RegExp;
+        default?: string;
+    }) => Validator<string>;
+    number: (options?: {
+        min?: number;
+        max?: number;
+        integer?: boolean;
+        finite?: boolean;
+        default?: number;
+    }) => Validator<number>;
+    boolean: (options?: {
+        default?: boolean;
+    }) => Validator<boolean>;
+    enum: <const T extends readonly [string, ...string[]]>(
+        values: T,
+        options?: {
+            default?: T[number];
+            case_insensitive?: boolean;
+        }
+    ) => Validator<T[number]>;
+    url: (options?: {
+        default?: string | URL;
+        protocols?: string[];
+    }) => Validator<URL>;
+    csv: (options?: {
+        separator?: string | RegExp;
+        min?: number;
+        max?: number;
+        default?: string[];
+        item?: {
+            min?: number;
+            max?: number;
+            pattern?: RegExp;
+        };
+    }) => Validator<string[] | undefined>;
+    optional: typeof validation.optional;
+    nullable: typeof validation.nullable;
+    array: typeof validation.array;
+    union: typeof validation.union;
+    literal: typeof validation.literal;
+    refine: typeof validation.refine;
+    object: typeof defineEnvSchema;
+    safeParse: <S extends EnvSchemaShape>(
+        schema: EnvObjectSchema<S>,
+        value?: EnvSource
+    ) => ValidationResult<EnvSchemaResult<S>>;
+    parse: <S extends EnvSchemaShape>(
+        schema: EnvObjectSchema<S>,
+        value?: EnvSource
+    ) => EnvSchemaResult<S>;
+};
+
+type EnvConfigApi = {
+    field: typeof defineEnvField;
+    safeMap: <TShape extends EnvMappedShape>(
+        shape: TShape,
+        value?: EnvSource
+    ) => ValidationResult<InferMappedShape<TShape>>;
+    map: <TShape extends EnvMappedShape>(
+        shape: TShape,
+        value?: EnvSource
+    ) => InferMappedShape<TShape>;
+};
+
+type EnvApi = {
+    string: <T extends string = string>(key: Uppercase<string>, _default?: T) => T;
+    enum: <const T extends readonly [string, ...string[]]>(
+        key: Uppercase<string>,
+        values: T,
+        _default?: T[number]
+    ) => T[number];
+    number: (key: Uppercase<string>, _default?: number) => number;
+    boolean: (key: Uppercase<string>, _default?: boolean) => boolean;
+    url: (key: Uppercase<string>, _default?: URL) => URL;
+    has: (key: Uppercase<string>) => boolean;
+    assert: (
+        keys: Uppercase<string>[],
+        error_builder?: (missing_keys: string[]) => string | Error
+    ) => void;
+    defined: (key: Uppercase<string>) => boolean;
+    readonly dev: boolean;
+    collection: <PF extends Uppercase<string>, RemovePrefix extends boolean = false>(
+        prefix: PF,
+        options?: Partial<{
+            reviver: (value: string | undefined, key: string) => any;
+            removePrefix: RemovePrefix;
+        }>
+    ) => Record<string, any>;
+    utils: {
+        select: <T, F>(
+            key: Uppercase<string>,
+            TRUE: T,
+            FALSE: F,
+            predicate?: (key: Uppercase<string>, value: any) => boolean
+        ) => T | F;
+    };
+    schema: EnvValidationApi;
+    config: EnvConfigApi;
+    readonly raw: Readonly<DotEnvEntries>;
+};
+
 function assertEnvSchemaShape(shape: EnvSchemaShape): void {
     for (const key of Object.keys(shape)) {
         if (key !== key.toUpperCase()) {
@@ -266,7 +373,7 @@ function mapEnvShape<TShape extends EnvMappedShape>(
 /**
  * Env-aware validation helpers for parsing `process.env` string values.
  */
-const envValidation = Object.freeze({
+const envValidation: EnvValidationApi = Object.freeze({
     /**
      * Reads a string environment variable.
      */
@@ -466,7 +573,7 @@ const envValidation = Object.freeze({
 /**
  * Config-mapping helpers for building final application config objects from env values.
  */
-const envConfig = Object.freeze({
+const envConfig: EnvConfigApi = Object.freeze({
     /**
      * Declares a single config field backed by an environment variable.
      */
@@ -494,7 +601,7 @@ const envConfig = Object.freeze({
     },
 });
 
-function loadDotEnv(file = ".env") {
+function loadDotEnv(file = ".env"): DotEnvEntries {
     if (!existsSync(file)) return createStore();
 
     try {
@@ -535,7 +642,7 @@ function loadDotEnv(file = ".env") {
 }
 
 // merge .env into process.env at load
-const dotEnvVars = loadDotEnv();
+const dotEnvVars: DotEnvEntries = loadDotEnv();
 for (const [k, v] of Object.entries(dotEnvVars)) {
     if (!(k in process.env)) process.env[k] = v;
 }
@@ -543,7 +650,7 @@ for (const [k, v] of Object.entries(dotEnvVars)) {
 /**
  * Main runtime API for loading, reading, validating, and mapping environment variables.
  */
-export const env = Object.freeze({
+export const env: EnvApi = Object.freeze({
     /**
      * Reads an environment variable as a string.
      */
@@ -664,7 +771,7 @@ export const env = Object.freeze({
         assertKey(prefix);
         const {reviver = (v) => v, removePrefix = false} = options;
         return Object.fromEntries(
-            Object.entries(process.env)
+            (Object.entries(process.env) as Array<[string, string | undefined]>)
                 .filter(([key]) => key.startsWith(prefix))
                 .map(([key, value]) => [
                     removePrefix ? key.slice(prefix.length) : key,
@@ -696,8 +803,8 @@ export const env = Object.freeze({
     /**
      * Raw values loaded from the `.env` file.
      */
-    get raw() {
-        return Object.freeze({...dotEnvVars})
+    get raw(): Readonly<DotEnvEntries> {
+        return Object.freeze({...dotEnvVars});
     },
 });
 
