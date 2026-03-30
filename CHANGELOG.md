@@ -1,3 +1,14 @@
+## [1.6.2](https://github.com/SourceRegistry/node-env/compare/v1.6.1...v1.6.2) (2026-03-30)
+
+
+### Bug Fixes
+
+* align release workflow with node 24 ([1ceac0a](https://github.com/SourceRegistry/node-env/commit/1ceac0ac803bfe8a413c342904dc397f664a50cd))
+* keep release job worktree clean ([d59b952](https://github.com/SourceRegistry/node-env/commit/d59b952567608cc0c1dd385745a26d24d5e13462))
+* restore lockfile before semantic-release ([f6e4e17](https://github.com/SourceRegistry/node-env/commit/f6e4e17e53eb0e06b6bd2cab03edfadaba6dc9c7))
+* use npm install in release workflow ([bc8c5fd](https://github.com/SourceRegistry/node-env/commit/bc8c5fd6ab8350dd6bb8e745474ee613c4d96158))
+* workflow ([b7437a2](https://github.com/SourceRegistry/node-env/commit/b7437a27b5d411148d2cb426537a80bfae7f41d2))
+
 ## [1.6.1](https://github.com/SourceRegistry/node-env/compare/v1.6.0...v1.6.1) (2026-03-30)
 
 
