@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/SourceRegistry/node-env/compare/v1.6.0...v1.6.1) (2026-03-30)
+
+
+### Bug Fixes
+
+* harden registry publish workflow ([a1b45f9](https://github.com/SourceRegistry/node-env/commit/a1b45f9f03fe29f6ab35633a6472efa682af51bb))
+
 # [1.6.0](https://github.com/SourceRegistry/node-env/compare/v1.5.0...v1.6.0) (2026-03-30)
 
 
