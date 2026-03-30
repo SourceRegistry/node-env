@@ -58,6 +58,8 @@ jobs:
           registry-url: "https://registry.npmjs.org/"
       - name: Install dependencies
         run: npm ci
+      - name: Restore lockfile
+        run: git restore package-lock.json
       - name: Create release metadata
         run: npx semantic-release
       - name: Fetch latest main and tags
