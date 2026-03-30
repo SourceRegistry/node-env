@@ -1,3 +1,16 @@
+# [1.6.0](https://github.com/SourceRegistry/node-env/compare/v1.5.0...v1.6.0) (2026-03-30)
+
+
+### Bug Fixes
+
+* align workflows with node 24 ([e547352](https://github.com/SourceRegistry/node-env/commit/e54735226c2147f8f979a9ec6663a5b26b42a2fd))
+* use npm install in workflows ([bdc6cf0](https://github.com/SourceRegistry/node-env/commit/bdc6cf0d4bd7c31a799c8310093bc5fb196f6d9b))
+
+
+### Features
+
+* add jsr publishing workflow ([88992d9](https://github.com/SourceRegistry/node-env/commit/88992d9755309f1995b03f40bf27336672ae6435))
+
 # [1.5.0](https://github.com/SourceRegistry/node-env/compare/v1.4.2...v1.5.0) (2026-03-28)
 
 
