@@ -106,7 +106,7 @@ jobs:
         if: needs.create-release.outputs.release_created == 'true'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --access public
+        run: npm publish --access public --ignore-scripts
 
   publish-jsr:
     name: Publish JSR
@@ -129,9 +129,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Install dependencies
-        if: needs.create-release.outputs.release_created == 'true'
-        run: npm install
       - name: Publish to JSR
         if: needs.create-release.outputs.release_created == 'true'
         run: npx jsr publish
