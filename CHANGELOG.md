@@ -1,3 +1,10 @@
+## [1.6.3](https://github.com/SourceRegistry/node-env/compare/v1.6.2...v1.6.3) (2026-07-17)
+
+
+### Bug Fixes
+
+* parse quoted dotenv values with inline comments ([ced0c18](https://github.com/SourceRegistry/node-env/commit/ced0c18c52eb1f6bb5ca60ed9fbbcf2353f1ca0c))
+
 ## [1.6.2](https://github.com/SourceRegistry/node-env/compare/v1.6.1...v1.6.2) (2026-03-30)
 
 
