@@ -619,13 +619,11 @@ function loadDotEnv(file = ".env"): DotEnvEntries {
             const key = normalizedLine.slice(0, separatorIndex).trim();
             if (!key || !ENV_KEY_PATTERN.test(key)) continue;
 
-            let value = normalizedLine.slice(separatorIndex + 1).trim();
+            let value = stripInlineComment(normalizedLine.slice(separatorIndex + 1).trim());
             if (value.startsWith("\"") && value.endsWith("\"") && value.length >= 2) {
                 value = parseQuotedValue(value, "\"");
             } else if (value.startsWith("'") && value.endsWith("'") && value.length >= 2) {
                 value = parseQuotedValue(value, "'");
-            } else {
-                value = stripInlineComment(value);
             }
 
             parsed[key] = value;

@@ -59,6 +59,8 @@ describe("env library", () => {
             "JSON=\"{\\\"ok\\\":true}\"\n" +
             "MULTILINE=\"hello\\nworld\"\n" +
             "SINGLE='single quoted value'\n" +
+            "DOUBLE_WITH_COMMENT=\"local\" # backend type\n" +
+            "SINGLE_WITH_COMMENT='lax' # same-site policy\n" +
             "HASH_IN_DOUBLE=\"value # keep\"\n" +
             "HASH_IN_SINGLE='value # keep'\n" +
             "NO_SPACE_HASH=value#keep\n" +
@@ -74,6 +76,8 @@ describe("env library", () => {
         expect(env.string("JSON")).toBe("{\"ok\":true}");
         expect(env.string("MULTILINE")).toBe("hello\nworld");
         expect(env.string("SINGLE")).toBe("single quoted value");
+        expect(env.string("DOUBLE_WITH_COMMENT")).toBe("local");
+        expect(env.string("SINGLE_WITH_COMMENT")).toBe("lax");
         expect(env.string("HASH_IN_DOUBLE")).toBe("value # keep");
         expect(env.string("HASH_IN_SINGLE")).toBe("value # keep");
         expect(env.string("NO_SPACE_HASH")).toBe("value#keep");
